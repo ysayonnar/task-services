@@ -1,15 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"sso/internal/config"
+	"sso/internal/logger"
 )
 
 func main() {
-	config := config.Parse()
-	fmt.Println(config)
+	cfg := config.Parse()
 
-	//TODO: setup logger
+	log := logger.New(cfg)
+
+	log.Info("config parsed", "config", cfg)
 
 	//TODO: подключиться к бд
 

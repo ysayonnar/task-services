@@ -1,3 +1,4 @@
+env: "dev" #dev, prod
 token_ttl: "24h"
 secret: "super_puper_secret"
 grpc:

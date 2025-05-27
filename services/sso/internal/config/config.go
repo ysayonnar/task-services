@@ -23,6 +23,7 @@ type DB struct {
 }
 
 type Config struct {
+	Env      string `yaml:"env"`
 	TokenTTL string `yaml:"token_ttl"`
 	Secret   string `yaml:"secret"`
 	GRPC     GRPC   `yaml:"grpc"`
