@@ -1,18 +1,19 @@
 package main
 
 import (
+	"sso/internal/app"
 	"sso/internal/config"
 	"sso/internal/logger"
 	"sso/internal/storage"
 )
 
 func main() {
+	// config parsing and logger setup
 	cfg := config.MustParse()
 	log := logger.New(cfg)
 	log.Info("config parsed", "config", cfg)
 
-	//TODO: вынести эту залупу в app
-
+	// storage connection
 	storage := storage.New()
 	err := storage.Conn()
 	if err != nil {
@@ -21,7 +22,13 @@ func main() {
 	}
 	log.Info("db connected")
 
-	//TODO: инициализировать приложение
+	// application initializing
+	app := app.New(log, &storage)
+	err = app.Listen(cfg.GRPC.Port)
+	if err != nil {
+		log.Error("error while listening gprc server", "error", err.Error())
+		return
+	}
 
 	//TODO: graceful
 }

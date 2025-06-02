@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"sync"
 
 	_ "github.com/lib/pq"
 )
+
+var mu sync.Mutex
 
 type Storage struct {
 	DB *sql.DB
