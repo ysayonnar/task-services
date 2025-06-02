@@ -7,10 +7,11 @@ import (
 )
 
 func main() {
-	cfg := config.Parse()
-
+	cfg := config.MustParse()
 	log := logger.New(cfg)
 	log.Info("config parsed", "config", cfg)
+
+	//TODO: вынести эту залупу в app
 
 	storage := storage.New()
 	err := storage.Conn()
@@ -18,11 +19,9 @@ func main() {
 		log.Error("error while connecting to db", "error", err.Error())
 		return
 	}
-
 	log.Info("db connected")
 
-	for {
-	}
-
 	//TODO: инициализировать приложение
+
+	//TODO: graceful
 }

@@ -23,11 +23,15 @@ func (s *Storage) Conn() error {
 	if dsn == "" {
 		return fmt.Errorf("op: %s, err: %s", op, "no env dsn")
 	}
+
 	conn, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return fmt.Errorf("op: %s, err: %w", op, err)
 	}
-	defer conn.Close()
+
+	if err := conn.Ping(); err != nil {
+		return fmt.Errorf("op: %s, ping error: %w", op, err)
+	}
 
 	s.DB = conn
 	return nil

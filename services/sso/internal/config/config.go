@@ -20,7 +20,7 @@ type Config struct {
 	GRPC     GRPC   `yaml:"grpc"`
 }
 
-func Parse() Config {
+func MustParse() Config {
 	var config Config
 
 	configFile, err := os.ReadFile(CONFIG_PATH)
