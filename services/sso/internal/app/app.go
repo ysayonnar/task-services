@@ -12,8 +12,9 @@ import (
 )
 
 type App struct {
-	Log        *slog.Logger
-	GrpcServer handlers.SsoServer
+	Log              *slog.Logger
+	GrpcServer       handlers.SsoServer
+	ConnectionServer *grpc.Server
 }
 
 func New(log *slog.Logger, storage *storage.Storage) App {
@@ -23,27 +24,24 @@ func New(log *slog.Logger, storage *storage.Storage) App {
 		Log:     log,
 		Storage: storage,
 	}
-
+	app.ConnectionServer = grpc.NewServer()
 	app.Log = log
 
 	return app
 }
 
-func (app *App) Listen(port int) error {
+func (app *App) MustListen(port int) {
 	const op = "app.Listen()"
 
 	conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return fmt.Errorf("op: %s, err: %w", op, err)
+		panic(err)
 	}
 
-	server := grpc.NewServer()
-	sso.RegisterAuthServiceServer(server, app.GrpcServer)
+	sso.RegisterAuthServiceServer(app.ConnectionServer, app.GrpcServer)
 
 	app.Log.Info(fmt.Sprintf("listening grpc on port %d", port))
-	if err := server.Serve(conn); err != nil {
-		return fmt.Errorf("op: %s, err: %w", op, err)
+	if err := app.ConnectionServer.Serve(conn); err != nil {
+		panic(err)
 	}
-
-	return nil
 }

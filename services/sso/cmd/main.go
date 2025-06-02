@@ -1,10 +1,14 @@
 package main
 
 import (
+	"log/slog"
+	"os"
+	"os/signal"
 	"sso/internal/app"
 	"sso/internal/config"
 	"sso/internal/logger"
 	"sso/internal/storage"
+	"syscall"
 )
 
 func main() {
@@ -24,11 +28,14 @@ func main() {
 
 	// application initializing
 	app := app.New(log, &storage)
-	err = app.Listen(cfg.GRPC.Port)
-	if err != nil {
-		log.Error("error while listening gprc server", "error", err.Error())
-		return
-	}
+	app.MustListen(cfg.GRPC.Port)
 
-	//TODO: graceful
+	// Graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+	sign := <-stop
+
+	log.Info("stopping application", slog.String("signal", sign.String()))
+	app.ConnectionServer.GracefulStop()
+	storage.DB.Close()
 }
