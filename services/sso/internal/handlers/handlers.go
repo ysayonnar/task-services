@@ -37,7 +37,7 @@ func (s *SsoServer) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
-	userId, err := s.Storage.InsertUser(req.Email, string(passwordHash))
+	userId, err := s.Storage.InsertUser(ctx, req.Email, string(passwordHash))
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
