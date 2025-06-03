@@ -38,7 +38,7 @@ func (app *App) MustListen(port int) {
 		panic(err)
 	}
 
-	sso.RegisterAuthServiceServer(app.ConnectionServer, app.GrpcServer)
+	sso.RegisterAuthServiceServer(app.ConnectionServer, &app.GrpcServer)
 
 	app.Log.Info(fmt.Sprintf("listening grpc on port %d", port))
 	if err := app.ConnectionServer.Serve(conn); err != nil {

@@ -2,14 +2,15 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
-	"sync"
+	"sso/internal/models"
 
 	_ "github.com/lib/pq"
 )
 
-var mu sync.Mutex
+var ErrUserExists = errors.New("user already exists")
 
 type Storage struct {
 	DB *sql.DB
@@ -38,4 +39,17 @@ func (s *Storage) Conn() error {
 
 	s.DB = conn
 	return nil
+}
+
+// TODO: implement
+func (s *Storage) GetUserByEmail(email string) (models.User, error) {
+	return models.User{}, nil
+}
+
+func (s *Storage) InsertUser(email string, passwordHash string) (int64, error) {
+
+}
+
+func (s *Storage) DeleteUser(email string) (int64, error) {
+	return 0, nil
 }

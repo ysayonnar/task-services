@@ -30,7 +30,7 @@ func main() {
 	app := app.New(log, &storage)
 	app.MustListen(cfg.GRPC.Port)
 
-	// Graceful shutdown
+	// graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 	sign := <-stop
