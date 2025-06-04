@@ -43,7 +43,6 @@ func (s *Storage) Conn() error {
 	return nil
 }
 
-// TODO: implement others
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
 	const op = "storage.GetUserByEmail"
 

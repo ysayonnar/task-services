@@ -2,7 +2,7 @@ env: "dev" #dev, prod
 token_ttl: "24h"
 secret: "super_puper_secret"
 grpc:
-  port: 50051
+  port: 80
 db:
   host: "localhost"
   port: 5432
