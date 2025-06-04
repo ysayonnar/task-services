@@ -12,6 +12,7 @@ import (
 )
 
 var ErrUserExists = errors.New("user already exists")
+var ErrUserNotFound = errors.New("user was not found")
 
 type Storage struct {
 	DB *sql.DB
@@ -42,8 +43,23 @@ func (s *Storage) Conn() error {
 	return nil
 }
 
+// TODO: implement others
 func (s *Storage) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
-	return models.User{}, nil
+	const op = "storage.GetUserByEmail"
+
+	query := `SELECT * FROM users WHERE email = $1;`
+
+	var user models.User
+	err := s.DB.QueryRowContext(ctx, query, email).Scan(&user.UserId, &user.Email, &user.PasswordHash, &user.CreatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.User{}, ErrUserNotFound
+		}
+
+		return models.User{}, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return user, nil
 }
 
 func (s *Storage) InsertUser(ctx context.Context, email string, passwordHash string) (int64, error) {
@@ -67,5 +83,18 @@ func (s *Storage) InsertUser(ctx context.Context, email string, passwordHash str
 }
 
 func (s *Storage) DeleteUser(ctx context.Context, email string) (int64, error) {
-	return 0, nil
+	const op = "storage.DeleteUser"
+
+	query := `DELETE FROM users WHERE email = $1 RETURNING user_id;`
+
+	var userId int64
+	err := s.DB.QueryRowContext(ctx, query, email).Scan(&userId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrUserNotFound
+		}
+		return 0, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return userId, nil
 }

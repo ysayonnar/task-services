@@ -49,3 +49,5 @@ func (s *SsoServer) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 
 	return &sso.RegisterResponse{UserId: userId}, nil
 }
+
+//TODO: implement others
