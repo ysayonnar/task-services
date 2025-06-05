@@ -38,8 +38,20 @@ func (s *Storage) Conn() error {
 	if err := conn.Ping(); err != nil {
 		return fmt.Errorf("op: %s, ping error: %w", op, err)
 	}
-
 	s.DB = conn
+
+	query := `CREATE TABLE IF NOT EXISTS users(
+		user_id SERIAL PRIMARY KEY,
+		email VARCHAR(72) UNIQUE NOT NULL,
+		password_hash VARCHAR(255) NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	_, err = s.DB.Exec(query)
+	if err != nil {
+		return fmt.Errorf("op: %s, table creating: %w", op, err)
+	}
+
 	return nil
 }
 
