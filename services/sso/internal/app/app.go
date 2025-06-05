@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"sso/internal/config"
 	"sso/internal/handlers"
 	"sso/internal/storage"
 
@@ -17,12 +18,13 @@ type App struct {
 	ConnectionServer *grpc.Server
 }
 
-func New(log *slog.Logger, storage *storage.Storage) App {
+func New(log *slog.Logger, storage *storage.Storage, cfg *config.Config) App {
 	var app App
 
 	app.GrpcServer = handlers.SsoServer{
 		Log:     log,
 		Storage: storage,
+		Cfg:     cfg,
 	}
 	app.ConnectionServer = grpc.NewServer()
 	app.Log = log

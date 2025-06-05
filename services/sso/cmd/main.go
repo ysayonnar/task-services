@@ -27,7 +27,7 @@ func main() {
 	log.Info("db connected")
 
 	// application initializing
-	app := app.New(log, &storage)
+	app := app.New(log, &storage, &cfg)
 	app.MustListen(cfg.GRPC.Port)
 
 	// graceful shutdown

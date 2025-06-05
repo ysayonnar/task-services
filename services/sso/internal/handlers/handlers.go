@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"sso/internal/config"
 	"sso/internal/storage"
 	"sso/internal/utils"
 
@@ -17,6 +18,7 @@ type SsoServer struct {
 	sso.UnimplementedAuthServiceServer
 	Log     *slog.Logger
 	Storage *storage.Storage
+	Cfg     *config.Config
 }
 
 func (s *SsoServer) Register(ctx context.Context, req *sso.RegisterRequest) (*sso.RegisterResponse, error) {
@@ -77,9 +79,13 @@ func (s *SsoServer) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 		return nil, status.Error(codes.Unauthenticated, "password is invalid")
 	}
 
-	//TODO: jwt token
+	token, err := utils.GenerateJwt(user.UserId, s.Cfg.Secret)
+	if err != nil {
+		log.Error("error while generating jwt", "error", err.Error())
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
 
-	return nil, nil
+	return &sso.LoginResponse{Token: token}, nil
 }
 
 func (s *SsoServer) Delete(ctx context.Context, req *sso.DeleteRequest) (*sso.DeleteResponse, error) {
