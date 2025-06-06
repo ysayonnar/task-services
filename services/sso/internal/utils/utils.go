@@ -16,11 +16,12 @@ func IsEmailValid(email string) bool {
 	return idx > 0 && idx < len(email)-1
 }
 
-func GenerateJwt(userId int64, SECRET string) (string, error) {
+func GenerateJwt(userId int64, SECRET string, tokenTTL string) (string, error) {
 	const op = "token.New()"
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
+		"exp":     tokenTTL,
 	})
 
 	signedToken, err := token.SignedString([]byte(SECRET))

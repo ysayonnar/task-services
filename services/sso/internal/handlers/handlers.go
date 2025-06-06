@@ -79,7 +79,7 @@ func (s *SsoServer) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 		return nil, status.Error(codes.Unauthenticated, "password is invalid")
 	}
 
-	token, err := utils.GenerateJwt(user.UserId, s.Cfg.Secret)
+	token, err := utils.GenerateJwt(user.UserId, s.Cfg.Secret, s.Cfg.TokenTTL)
 	if err != nil {
 		log.Error("error while generating jwt", "error", err.Error())
 		return nil, status.Error(codes.Internal, "internal server error")
