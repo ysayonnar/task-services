@@ -16,13 +16,13 @@ type App struct {
 }
 
 func New(logger *slog.Logger, cfg config.Config) App {
-	router := handlers.InitRouter()
+	router := handlers.InitRouter(logger)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
 		ReadTimeout:  time.Second * time.Duration(cfg.ReadTimeout),
 		WriteTimeout: time.Second * time.Duration(cfg.WriteTimeout),
-		Handler:      router,
+		Handler:      router.Mux,
 	}
 
 	return App{Server: &srv, Log: logger, Config: &cfg}

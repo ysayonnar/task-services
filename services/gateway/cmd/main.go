@@ -13,7 +13,7 @@ func main() {
 	log.Info("config parsed", "config", cfg)
 
 	app := app.New(log, cfg)
+	log.Info("server started", slog.Int("port", cfg.Port))
 	app.MustListen()
 
-	log.Info("server started", slog.Int("port", cfg.Port))
 }

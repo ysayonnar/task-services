@@ -29,3 +29,12 @@ services:
     volumes: 
       - ./db-data/sso-postgres/:/var/lib/postgresql/data
 
+  gateway:
+    build:
+      context: ./../gateway
+      dockerfile: ./../gateway/gateway.dockerfile
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
