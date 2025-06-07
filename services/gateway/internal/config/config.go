@@ -9,9 +9,11 @@ import (
 
 var CONFIG_PATH = "config.yaml"
 
-// TODO: дописать поля для сетапа http-сервера
 type Config struct {
-	Env string `yaml:"env"`
+	Env          string `yaml:"env"`
+	Port         int    `yaml:"port"`
+	ReadTimeout  int    `yaml:"read_timeout"`
+	WriteTimeout int    `yaml:"write_timeout"`
 }
 
 func MustParse() Config {

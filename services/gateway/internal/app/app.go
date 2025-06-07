@@ -1,9 +1,12 @@
 package app
 
 import (
+	"fmt"
 	"gateway/internal/config"
+	"gateway/internal/handlers"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 type App struct {
@@ -13,11 +16,21 @@ type App struct {
 }
 
 func New(logger *slog.Logger, cfg config.Config) App {
-	//TODO: setup server from cfg
-	srv := http.Server{}
+	router := handlers.InitRouter()
+
+	srv := http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
+		ReadTimeout:  time.Second * time.Duration(cfg.ReadTimeout),
+		WriteTimeout: time.Second * time.Duration(cfg.WriteTimeout),
+		Handler:      router,
+	}
+
 	return App{Server: &srv, Log: logger, Config: &cfg}
 }
 
 func (app *App) MustListen() {
-	//TODO: listen
+	err := app.Server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"gateway/internal/app"
 	"gateway/internal/config"
 	"gateway/internal/logger"
+	"log/slog"
 )
 
 func main() {
@@ -10,5 +12,8 @@ func main() {
 	log := logger.New(cfg)
 	log.Info("config parsed", "config", cfg)
 
-	// TODO: setup application
+	app := app.New(log, cfg)
+	app.MustListen()
+
+	log.Info("server started", slog.Int("port", cfg.Port))
 }
