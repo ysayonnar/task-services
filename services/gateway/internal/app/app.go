@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"gateway/internal/config"
+	"gateway/internal/grpc"
 	"gateway/internal/handlers"
 	"log/slog"
 	"net/http"
@@ -15,8 +16,8 @@ type App struct {
 	Config *config.Config
 }
 
-func New(logger *slog.Logger, cfg config.Config) App {
-	router := handlers.InitRouter(logger)
+func New(logger *slog.Logger, cfg config.Config, clients *grpc.GrpcClients) App {
+	router := handlers.InitRouter(logger, clients)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),

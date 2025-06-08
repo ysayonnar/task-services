@@ -2,18 +2,20 @@ package handlers
 
 import (
 	"fmt"
+	"gateway/internal/grpc"
 	"io"
 	"log/slog"
 	"net/http"
 )
 
 type Router struct {
-	Log *slog.Logger
-	Mux *http.ServeMux
+	Log     *slog.Logger
+	Mux     *http.ServeMux
+	Clients *grpc.GrpcClients
 }
 
-func InitRouter(logger *slog.Logger) Router {
-	router := Router{Log: logger, Mux: http.NewServeMux()}
+func InitRouter(logger *slog.Logger, clients *grpc.GrpcClients) Router {
+	router := Router{Log: logger, Mux: http.NewServeMux(), Clients: clients}
 
 	router.Mux.HandleFunc("/echo", router.Echo)
 
