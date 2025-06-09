@@ -17,6 +17,7 @@ func InitRouter(logger *slog.Logger, clients *grpc.GrpcClients) Router {
 
 	router.Mux.HandleFunc("/sso/register", router.SsoRegister)
 	router.Mux.HandleFunc("/sso/login", router.SsoLogin)
+	router.Mux.HandleFunc("/sso/delete", router.SsoDelete)
 
 	return router
 }
