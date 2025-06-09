@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+  # SSO
   sso:
     build:
       context: ./../sso
@@ -29,6 +30,7 @@ services:
     volumes: 
       - ./db-data/sso-postgres/:/var/lib/postgresql/data
 
+  # GATEWAY
   gateway:
     build:
       context: ./../gateway
@@ -38,3 +40,34 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
+  # TASKS
+  tasks:
+    build:
+      context: ./../tasks
+      dockerfile: ./../tasks/tasks.dockerfile
+    restart: always
+    ports:
+      - "8082:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: "host=tasks-postgres port=5432 user=postgres password=password dbname=tasks sslmode=disable timezone=UTC connect_timeout=5"
+
+  tasks-postgres:
+    image: 'postgres:14.0'
+    ports:
+      - "5432:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment: 
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tasks-postgres
+    volumes: 
+      - ./db-data/tasks-postgres/:/var/lib/postgresql/data
+
+
