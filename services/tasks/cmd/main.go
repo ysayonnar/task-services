@@ -19,4 +19,7 @@ func main() {
 		return
 	}
 	log.Info("db connected")
+
+	for {
+	}
 }

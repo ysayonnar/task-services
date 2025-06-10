@@ -3,7 +3,7 @@ package logger
 import (
 	"log/slog"
 	"os"
-	"sso/internal/config"
+	"tasks/internal/config"
 )
 
 func New(cfg config.Config) *slog.Logger {
