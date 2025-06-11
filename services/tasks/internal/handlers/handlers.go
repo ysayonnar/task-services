@@ -65,9 +65,18 @@ func (server *TasksServer) CreateCategory(ctx context.Context, req *tasks.Create
 func (server *TasksServer) DeleteTask(ctx context.Context, req *tasks.DeleteTaskRequest) (*tasks.DeleteTaskResponse, error) {
 	const op = "handlers.DeleteTask"
 	log := server.Log.With(slog.String("op", op))
-	_ = log
 
-	return nil, nil
+	deletedTaskId, err := server.Storage.DeleteTask(ctx, req.GetUserId(), req.GetTaskId())
+	if err != nil {
+		if errors.Is(err, storage.ErrCategoryNotFound) {
+			return nil, status.Error(codes.NotFound, "task with such id doesn't exist")
+		}
+
+		log.Error("error while deleting task", "error", err.Error())
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
+	return &tasks.DeleteTaskResponse{TaskId: deletedTaskId}, nil
 }
 
 func (server *TasksServer) GetTasks(ctx context.Context, req *tasks.GetTasksRequest) (*tasks.GetTasksResponse, error) {

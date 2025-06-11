@@ -13,6 +13,7 @@ import (
 
 var ErrCategoryNotFound = errors.New("category with such id doesn't exist")
 var ErrCategoryAlreadyExists = errors.New("category with such name already exists")
+var ErrTaskNotFound = errors.New("task with such id was not found")
 
 type Storage struct {
 	DB *sql.DB
@@ -127,4 +128,22 @@ func (s *Storage) InsertCategory(ctx context.Context, name string) (int64, error
 	}
 
 	return categoryId, nil
+}
+
+func (s *Storage) DeleteTask(ctx context.Context, userId int64, taskId int64) (int64, error) {
+	const op = "storage.DeleteTask"
+
+	query := `DELETE FROM tasks WHERE user_id = $1 AND task_id = $2 RETURNING task_id;`
+
+	var deletedTaskId int64
+	err := s.DB.QueryRowContext(ctx, query, userId, taskId).Scan(&deletedTaskId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrTaskNotFound
+		}
+
+		return 0, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return deletedTaskId, nil
 }
