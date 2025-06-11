@@ -4,23 +4,23 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"sso/internal/config"
-	"sso/internal/handlers"
-	"sso/internal/storage"
+	"tasks/internal/config"
+	"tasks/internal/handlers"
+	"tasks/internal/storage"
 
-	sso "github.com/ysayonnar/task-contracts/sso/gen/go"
+	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
 	"google.golang.org/grpc"
 )
 
 type App struct {
-	GrpcServer       handlers.SsoServer
+	GrpcServer       handlers.TasksServer
 	ConnectionServer *grpc.Server
 }
 
 func New(log *slog.Logger, storage *storage.Storage, cfg *config.Config) App {
 	var app App
 
-	app.GrpcServer = handlers.SsoServer{
+	app.GrpcServer = handlers.TasksServer{
 		Log:     log,
 		Storage: storage,
 		Cfg:     cfg,
@@ -41,7 +41,7 @@ func (app *App) MustListen() {
 		panic(err)
 	}
 
-	sso.RegisterAuthServiceServer(app.ConnectionServer, &app.GrpcServer)
+	tasks.RegisterTasksServiceServer(app.ConnectionServer, &app.GrpcServer)
 
 	log.Info(fmt.Sprintf("listening grpc on port %d", port))
 	if err := app.ConnectionServer.Serve(conn); err != nil {

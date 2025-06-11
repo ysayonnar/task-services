@@ -1,6 +1,11 @@
 package main
 
 import (
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+	"tasks/internal/app"
 	"tasks/internal/config"
 	"tasks/internal/logger"
 	"tasks/internal/storage"
@@ -20,6 +25,15 @@ func main() {
 	}
 	log.Info("db connected")
 
-	for {
-	}
+	app := app.New(log, &storage, &cfg)
+	app.MustListen()
+
+	// graceful shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+	sign := <-stop
+
+	log.Info("stopping application", slog.String("signal", sign.String()))
+	app.ConnectionServer.GracefulStop()
+	storage.DB.Close()
 }
