@@ -48,9 +48,18 @@ func (server *TasksServer) CreateTask(ctx context.Context, req *tasks.CreateTask
 func (server *TasksServer) CreateCategory(ctx context.Context, req *tasks.CreateCategoryRequest) (*tasks.CreateCategoryResponse, error) {
 	const op = "handlers.CreateCategory"
 	log := server.Log.With(slog.String("op", op))
-	_ = log
 
-	return nil, nil
+	categoryId, err := server.Storage.InsertCategory(ctx, req.GetName())
+	if err != nil {
+		if errors.Is(err, storage.ErrCategoryAlreadyExists) {
+			return nil, status.Error(codes.AlreadyExists, "category already exists")
+		}
+
+		log.Error("error while inserting category", "error", err.Error())
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
+	return &tasks.CreateCategoryResponse{CategoryId: categoryId}, nil
 }
 
 func (server *TasksServer) DeleteTask(ctx context.Context, req *tasks.DeleteTaskRequest) (*tasks.DeleteTaskResponse, error) {

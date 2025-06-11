@@ -12,6 +12,7 @@ import (
 )
 
 var ErrCategoryNotFound = errors.New("category with such id doesn't exist")
+var ErrCategoryAlreadyExists = errors.New("category with such name already exists")
 
 type Storage struct {
 	DB *sql.DB
@@ -51,7 +52,7 @@ func (s *Storage) Conn() error {
 
 	CREATE TABLE IF NOT EXISTS categories(
 		category_id SERIAL PRIMARY KEY,
-		name VARCHAR(255) NOT NULL
+		name VARCHAR(255) UNIQUE NOT NULL
 	);
 	
 	CREATE TABLE IF NOT EXISTS tasks_categories(
@@ -96,7 +97,7 @@ func (s *Storage) InsertTask(ctx context.Context, task models.Task, categoryId i
 	_, err = tx.ExecContext(ctx, queryLink, taskId, categoryId)
 	if err != nil {
 		var pqErr *pq.Error
-		if errors.As(err, pqErr) {
+		if errors.As(err, &pqErr) {
 			if pqErr.Code == "23503" {
 				return 0, ErrCategoryNotFound
 			}
@@ -105,4 +106,25 @@ func (s *Storage) InsertTask(ctx context.Context, task models.Task, categoryId i
 	}
 
 	return taskId, nil
+}
+
+func (s *Storage) InsertCategory(ctx context.Context, name string) (int64, error) {
+	const op = "storage.InsertCategory"
+
+	query := `INSERT INTO categories(name) VALUES($1) RETURNING category_id;`
+
+	var categoryId int64
+	err := s.DB.QueryRowContext(ctx, query, name).Scan(&categoryId)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == "23505" {
+				return 0, ErrCategoryAlreadyExists
+			}
+		}
+
+		return 0, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return categoryId, nil
 }
