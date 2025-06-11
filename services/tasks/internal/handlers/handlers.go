@@ -68,7 +68,7 @@ func (server *TasksServer) DeleteTask(ctx context.Context, req *tasks.DeleteTask
 
 	deletedTaskId, err := server.Storage.DeleteTask(ctx, req.GetUserId(), req.GetTaskId())
 	if err != nil {
-		if errors.Is(err, storage.ErrCategoryNotFound) {
+		if errors.Is(err, storage.ErrTaskNotFound) {
 			return nil, status.Error(codes.NotFound, "task with such id doesn't exist")
 		}
 
