@@ -25,21 +25,21 @@ func (s *SsoServer) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 	const op = "handlers.Register"
 	log := s.Log.With(slog.String("op", op))
 
-	if !utils.IsEmailValid(req.Email) {
+	if !utils.IsEmailValid(req.GetEmail()) {
 		return nil, status.Error(codes.InvalidArgument, "email is invalid")
 	}
 
-	if len(req.Password) > 72 || len(req.Password) < 8 {
+	if len(req.GetPassword()) > 72 || len(req.GetPassword()) < 8 {
 		return nil, status.Error(codes.InvalidArgument, "password length is invalid")
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.GetPassword()), bcrypt.DefaultCost)
 	if err != nil {
 		log.Error("error while hashing password", "error", err.Error())
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
-	userId, err := s.Storage.InsertUser(ctx, req.Email, string(passwordHash))
+	userId, err := s.Storage.InsertUser(ctx, req.GetEmail(), string(passwordHash))
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
@@ -56,15 +56,15 @@ func (s *SsoServer) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 	const op = "handlers.Login"
 	log := s.Log.With(slog.String("op", op))
 
-	if !utils.IsEmailValid(req.Email) {
+	if !utils.IsEmailValid(req.GetEmail()) {
 		return nil, status.Error(codes.InvalidArgument, "email is invalid")
 	}
 
-	if len(req.Password) > 72 || len(req.Password) < 8 {
+	if len(req.GetPassword()) > 72 || len(req.GetPassword()) < 8 {
 		return nil, status.Error(codes.InvalidArgument, "password length is invalid")
 	}
 
-	user, err := s.Storage.GetUserByEmail(ctx, req.Email)
+	user, err := s.Storage.GetUserByEmail(ctx, req.GetEmail())
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user with this email was not found")
@@ -74,7 +74,7 @@ func (s *SsoServer) Login(ctx context.Context, req *sso.LoginRequest) (*sso.Logi
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.GetPassword()))
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "password is invalid")
 	}
@@ -92,15 +92,15 @@ func (s *SsoServer) Delete(ctx context.Context, req *sso.DeleteRequest) (*sso.De
 	const op = "handlers.Delete"
 	log := s.Log.With(slog.String("op", op))
 
-	if !utils.IsEmailValid(req.Email) {
+	if !utils.IsEmailValid(req.GetEmail()) {
 		return nil, status.Error(codes.InvalidArgument, "email is invalid")
 	}
 
-	if len(req.Password) > 72 || len(req.Password) < 8 {
+	if len(req.GetPassword()) > 72 || len(req.GetPassword()) < 8 {
 		return nil, status.Error(codes.InvalidArgument, "password length is invalid")
 	}
 
-	user, err := s.Storage.GetUserByEmail(ctx, req.Email)
+	user, err := s.Storage.GetUserByEmail(ctx, req.GetEmail())
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user with this email was not found")
@@ -110,12 +110,12 @@ func (s *SsoServer) Delete(ctx context.Context, req *sso.DeleteRequest) (*sso.De
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.GetPassword()))
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "password is invalid")
 	}
 
-	_, err = s.Storage.DeleteUser(ctx, req.Email)
+	_, err = s.Storage.DeleteUser(ctx, req.GetEmail())
 	if err != nil {
 		// NOTE: no checking for storage.ErrUserNotFound, it was at line 99
 		log.Error("error while deleting user", "error", err.Error())
