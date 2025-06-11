@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
+	"tasks/internal/models"
 
 	_ "github.com/lib/pq"
 )
@@ -62,3 +64,5 @@ func (s *Storage) Conn() error {
 
 	return nil
 }
+
+func (s *Storage) InsertTask(ctx context.Context, task models.Task)
