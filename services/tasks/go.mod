@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/lib/pq v1.10.9
-	github.com/ysayonnar/task-contracts v0.0.2
+	github.com/ysayonnar/task-contracts v0.0.6
 	google.golang.org/grpc v1.73.0
 	gopkg.in/yaml.v3 v3.0.1
 )

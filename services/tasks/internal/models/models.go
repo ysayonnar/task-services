@@ -5,7 +5,6 @@ import "time"
 type Task struct {
 	TaskId       int64
 	UserId       int64
-	CategoryId   int64
 	Title        string
 	Description  string
 	Deadline     time.Time

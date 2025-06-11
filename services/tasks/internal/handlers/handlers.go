@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"tasks/internal/config"
+	"tasks/internal/models"
 	"tasks/internal/storage"
 
 	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type TasksServer struct {
@@ -19,6 +23,32 @@ type TasksServer struct {
 func (server *TasksServer) CreateTask(ctx context.Context, req *tasks.CreateTaskRequest) (*tasks.CreateTaskResponse, error) {
 	const op = "handlers.CreateTask"
 	log := server.Log.With(slog.String("op", op))
+
+	taskToCreate := models.Task{
+		UserId:       req.GetUserId(),
+		Title:        req.GetTitle(),
+		Description:  req.GetDescription(),
+		Deadline:     req.GetDeadline().AsTime(),
+		IsNotificate: req.GetIsNotificate(),
+	}
+
+	taskId, err := server.Storage.InsertTask(ctx, taskToCreate, req.GetCategoryId())
+	if err != nil {
+		if errors.Is(err, storage.ErrCategoryNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "category with such id doesn't exist")
+		}
+
+		log.Error("error while inserting task", "error", err.Error())
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
+	return &tasks.CreateTaskResponse{TaskId: taskId}, nil
+}
+
+func (server *TasksServer) CreateCategory(ctx context.Context, req *tasks.CreateCategoryRequest) (*tasks.CreateCategoryResponse, error) {
+	const op = "handlers.CreateCategory"
+	log := server.Log.With(slog.String("op", op))
+	_ = log
 
 	return nil, nil
 }
