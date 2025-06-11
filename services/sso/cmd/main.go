@@ -28,7 +28,7 @@ func main() {
 
 	// application initializing
 	app := app.New(log, &storage, &cfg)
-	app.MustListen(cfg.GRPC.Port)
+	app.MustListen()
 
 	// graceful shutdown
 	stop := make(chan os.Signal, 1)

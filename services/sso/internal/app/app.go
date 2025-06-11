@@ -13,7 +13,6 @@ import (
 )
 
 type App struct {
-	Log              *slog.Logger
 	GrpcServer       handlers.SsoServer
 	ConnectionServer *grpc.Server
 }
@@ -27,13 +26,14 @@ func New(log *slog.Logger, storage *storage.Storage, cfg *config.Config) App {
 		Cfg:     cfg,
 	}
 	app.ConnectionServer = grpc.NewServer()
-	app.Log = log
 
 	return app
 }
 
-func (app *App) MustListen(port int) {
+func (app *App) MustListen() {
 	const op = "app.Listen()"
+
+	port := app.GrpcServer.Cfg.GRPC.Port
 
 	conn, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -42,7 +42,7 @@ func (app *App) MustListen(port int) {
 
 	sso.RegisterAuthServiceServer(app.ConnectionServer, &app.GrpcServer)
 
-	app.Log.Info(fmt.Sprintf("listening grpc on port %d", port))
+	app.GrpcServer.Log.Info(fmt.Sprintf("listening grpc on port %d", port))
 	if err := app.ConnectionServer.Serve(conn); err != nil {
 		panic(err)
 	}
