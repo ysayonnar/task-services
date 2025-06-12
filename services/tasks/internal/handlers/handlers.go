@@ -82,9 +82,17 @@ func (server *TasksServer) DeleteTask(ctx context.Context, req *tasks.DeleteTask
 func (server *TasksServer) GetTasks(ctx context.Context, req *tasks.GetTasksRequest) (*tasks.GetTasksResponse, error) {
 	const op = "handlers.GetTasks"
 	log := server.Log.With(slog.String("op", op))
-	_ = log
 
-	return nil, nil
+	foundTasks, err := server.Storage.GetTasksByUserId(ctx, req.GetUserId())
+	if err != nil {
+		if errors.Is(err, storage.ErrTaskNotFound) {
+			return nil, status.Error(codes.NotFound, "tasks not found")
+		}
+
+		log.Error("error while finding tasks", "error", err)
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+	return &tasks.GetTasksResponse{Tasks: foundTasks}, nil
 }
 
 func (server *TasksServer) GetTasksByCategory(ctx context.Context, req *tasks.GetTasksByCategoryRequest) (*tasks.GetTasksByCategoryResponse, error) {

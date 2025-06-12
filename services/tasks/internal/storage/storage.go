@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
+	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
 	"os"
 	"tasks/internal/models"
-
-	"github.com/lib/pq"
 )
 
 var ErrCategoryNotFound = errors.New("category with such id doesn't exist")
@@ -146,4 +146,46 @@ func (s *Storage) DeleteTask(ctx context.Context, userId int64, taskId int64) (i
 	}
 
 	return deletedTaskId, nil
+}
+
+func (s *Storage) GetTasksByUserId(ctx context.Context, userId int64) ([]*tasks.Task, error) {
+	const op = "storage.GetTasksByUserId"
+
+	query := `SELECT (t.task_id, tc.category_id, c.name, t.title, t.description, t.deadline, t.is_notificate, t.created_at) FROM tasks AS t INNER JOIN tasks_categories AS tc ON t.task_id = tc.task_id INNER JOIN categories AS c ON c.category_id = tc.category_id WHERE t.task_id = $1;`
+
+	rows, err := s.DB.QueryContext(ctx, query, userId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrTaskNotFound
+		}
+
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+	defer rows.Close()
+
+	var selectedTasks []*tasks.Task
+	for rows.Next() {
+		var task tasks.Task
+
+		err := rows.Scan(
+			&task.TaskId,
+			&task.CategoryId,
+			&task.CategoryName,
+			&task.Title,
+			&task.Description,
+			&task.Deadline,
+			&task.IsNotificate,
+			&task.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("op: %s, err: %w", op, err)
+		}
+		selectedTasks = append(selectedTasks, &task)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return selectedTasks, nil
 }
