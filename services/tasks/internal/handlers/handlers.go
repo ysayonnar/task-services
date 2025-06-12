@@ -98,9 +98,17 @@ func (server *TasksServer) GetTasks(ctx context.Context, req *tasks.GetTasksRequ
 func (server *TasksServer) GetTasksByCategory(ctx context.Context, req *tasks.GetTasksByCategoryRequest) (*tasks.GetTasksByCategoryResponse, error) {
 	const op = "handlers.GetTasksByCategory"
 	log := server.Log.With(slog.String("op", op))
-	_ = log
 
-	return nil, nil
+	foundTasks, err := server.Storage.GetTasksByUserIdAndCategoryId(ctx, req.GetUserId(), req.GetCategoryId())
+	if err != nil {
+		if errors.Is(err, storage.ErrTaskNotFound) {
+			return nil, status.Error(codes.NotFound, "tasks not found")
+		}
+
+		log.Error("error while finding tasks", "error", err)
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+	return &tasks.GetTasksByCategoryResponse{Tasks: foundTasks}, nil
 }
 
 func (server *TasksServer) UpdateTask(ctx context.Context, req *tasks.UpdateTaskRequest) (*tasks.UpdateTaskResponse, error) {
