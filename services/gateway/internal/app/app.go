@@ -17,7 +17,7 @@ type App struct {
 }
 
 func New(logger *slog.Logger, cfg config.Config, clients *grpc.GrpcClients) App {
-	router := handlers.InitRouter(logger, clients)
+	router := handlers.InitRouter(logger, clients, cfg)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),

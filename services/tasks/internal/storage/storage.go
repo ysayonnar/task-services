@@ -231,3 +231,25 @@ func (s *Storage) GetTasksByUserIdAndCategoryId(ctx context.Context, userId int6
 
 	return selectedTasks, nil
 }
+
+func (s *Storage) UpdateTask(ctx context.Context, task models.Task) (int64, error) {
+	const op = "storage.UpdateTask"
+
+	query := "UPDATE tasks SET title = $1, description = $2, is_notificate = $3, deadline = $4 WHERE user_id = $5 AND task_id = $6;"
+
+	res, err := s.DB.ExecContext(ctx, query, task.Title, task.Deadline, task.IsNotificate, task.Deadline, task.UserId, task.TaskId)
+	if err != nil {
+		return 0, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	if rowsAffected == 0 {
+		return 0, ErrTaskNotFound
+	}
+
+	return task.TaskId, nil
+}

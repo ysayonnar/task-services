@@ -2,4 +2,4 @@ env: "dev"
 port: 80
 read_timeout: 1
 write_timeout: 1
-
+secret: "super_puper_secret"

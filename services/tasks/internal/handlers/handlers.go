@@ -114,7 +114,26 @@ func (server *TasksServer) GetTasksByCategory(ctx context.Context, req *tasks.Ge
 func (server *TasksServer) UpdateTask(ctx context.Context, req *tasks.UpdateTaskRequest) (*tasks.UpdateTaskResponse, error) {
 	const op = "handlers.UpdateTask"
 	log := server.Log.With(slog.String("op", op))
-	_ = log
+
+	var task models.Task
+	task.Title = req.GetTitle()
+	task.Description = req.GetDescription()
+	task.IsNotificate = req.GetIsNotificate()
+	task.Deadline = req.GetDeadline().AsTime()
+	task.UserId = req.GetUserId()
+	task.TaskId = req.GetTaskId()
+
+	taskId, err := server.Storage.UpdateTask(ctx, task)
+	if err != nil {
+		if errors.Is(err, storage.ErrTaskNotFound) {
+			return nil, status.Error(codes.NotFound, "task not found")
+		}
+
+		log.Error("error while updating task")
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
+	return &tasks.UpdateTaskResponse{TaskId: taskId}, nil
 
 	return nil, nil
 }

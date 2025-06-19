@@ -14,6 +14,7 @@ type Config struct {
 	Port         int    `yaml:"port"`
 	ReadTimeout  int    `yaml:"read_timeout"`
 	WriteTimeout int    `yaml:"write_timeout"`
+	Secret       string `yaml:"secret"`
 }
 
 func MustParse() Config {
