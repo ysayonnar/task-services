@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -19,9 +20,10 @@ func IsEmailValid(email string) bool {
 func GenerateJwt(userId int64, SECRET string, tokenTTL string) (string, error) {
 	const op = "token.New()"
 
+	duration, _ := time.ParseDuration(tokenTTL)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userId,
-		"exp":     tokenTTL,
+		"exp":     time.Now().Add(duration).Unix(),
 	})
 
 	signedToken, err := token.SignedString([]byte(SECRET))

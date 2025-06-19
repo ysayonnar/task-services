@@ -17,6 +17,8 @@ services:
 
   sso-postgres:
     image: 'postgres:14.0'
+    logging:
+      driver: "none"
     ports:
       - "5432:5432"
     restart: always
@@ -57,6 +59,8 @@ services:
 
   tasks-postgres:
     image: 'postgres:14.0'
+    logging:
+      driver: "none"
     ports:
       - "5433:5432"
     restart: always

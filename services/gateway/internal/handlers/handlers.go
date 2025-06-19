@@ -53,7 +53,7 @@ func (router *Router) AuthMW(next http.HandlerFunc) http.HandlerFunc {
 				return nil, jwt.ErrSignatureInvalid
 			}
 
-			return router.Config.Secret, nil
+			return []byte(router.Config.Secret), nil
 		})
 
 		if err != nil || !token.Valid {

@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"gateway/internal/utils"
-	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -24,7 +22,7 @@ func (router *Router) Register(w http.ResponseWriter, r *http.Request) {
 	var dto sso.RegisterRequest
 	err := utils.ReadJSON(w, r, &dto)
 	if err != nil {
-		log.Error("error while reading json", err.Error())
+		log.Error("error while reading json", "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -55,7 +53,7 @@ func (router *Router) Login(w http.ResponseWriter, r *http.Request) {
 	var dto sso.LoginRequest
 	err := utils.ReadJSON(w, r, &dto)
 	if err != nil {
-		log.Error("error while reading json", err.Error())
+		log.Error("error while reading json", "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -86,7 +84,7 @@ func (router *Router) Delete(w http.ResponseWriter, r *http.Request) {
 	var dto sso.DeleteRequest
 	err := utils.ReadJSON(w, r, &dto)
 	if err != nil {
-		log.Error("error while reading json", err.Error())
+		log.Error("error while reading json", "error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
