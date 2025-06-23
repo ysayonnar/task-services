@@ -21,9 +21,13 @@ type Config struct {
 }
 
 func MustParse() Config {
+	return MustParseByPath(CONFIG_PATH)
+}
+
+func MustParseByPath(path string) Config {
 	var config Config
 
-	configFile, err := os.ReadFile(CONFIG_PATH)
+	configFile, err := os.ReadFile(path)
 	if err != nil {
 		panic(fmt.Errorf("error while reading config file: %w", err))
 	}

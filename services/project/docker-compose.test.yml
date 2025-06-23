@@ -1,0 +1,75 @@
+version: '3'
+
+services:
+  # SSO
+  sso:
+    build:
+      context: ./../sso
+      dockerfile: ./../sso/sso.dockerfile
+    restart: always
+    ports:
+      - "8081:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: "host=sso-postgres port=5432 user=postgres password=password dbname=users sslmode=disable timezone=UTC connect_timeout=5"
+
+  sso-postgres:
+    image: 'postgres:14.0'
+    logging:
+      driver: "none"
+    ports:
+      - "5432:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    volumes:
+      - ./test-db-data/sso-postgres/:/var/lib/postgresql/data
+
+  # GATEWAY
+  gateway:
+    build:
+      context: ./../gateway
+      dockerfile: ./../gateway/gateway.dockerfile
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  # TASKS
+  tasks:
+    build:
+      context: ./../tasks
+      dockerfile: ./../tasks/tasks.dockerfile
+    restart: always
+    ports:
+      - "8082:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      DSN: "host=tasks-postgres port=5432 user=postgres password=password dbname=tasks sslmode=disable timezone=UTC connect_timeout=5"
+
+  tasks-postgres:
+    image: 'postgres:14.0'
+    logging:
+      driver: "none"
+    ports:
+      - "5433:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tasks
+    volumes:
+      - ./test-db-data/tasks-postgres/:/var/lib/postgresql/data
