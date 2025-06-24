@@ -55,6 +55,14 @@ func TestInvalidEmailAndPassword(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, codes.InvalidArgument, status.Code(err))
 		assert.Empty(t, loginResponse)
+
+		deleteResponse, err := st.AuthClient.Delete(ctx, &sso.DeleteRequest{
+			Email:    invalidEmail,
+			Password: validPassword,
+		})
+		require.Error(t, err)
+		assert.Equal(t, codes.InvalidArgument, status.Code(err))
+		assert.Empty(t, deleteResponse)
 	}
 
 	validEmail := gofakeit.Email()
@@ -76,5 +84,13 @@ func TestInvalidEmailAndPassword(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, codes.InvalidArgument, status.Code(err))
 		assert.Empty(t, loginResponse)
+
+		deleteResponse, err := st.AuthClient.Delete(ctx, &sso.DeleteRequest{
+			Email:    validEmail,
+			Password: invalidPassword,
+		})
+		require.Error(t, err)
+		assert.Equal(t, codes.InvalidArgument, status.Code(err))
+		assert.Empty(t, deleteResponse)
 	}
 }
