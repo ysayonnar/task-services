@@ -15,7 +15,11 @@ const (
 	passwordDefaultLength = 14
 )
 
-func TestRegisterLogin_Login_HappyPath(t *testing.T) {
+func randomFakePassword(length int) string {
+	return gofakeit.Password(true, true, true, true, false, length)
+}
+
+func TestRegisterLoginDeleteHappyPath(t *testing.T) {
 	ctx, st := suite.New(t)
 
 	email := gofakeit.Email()
@@ -56,8 +60,11 @@ func TestRegisterLogin_Login_HappyPath(t *testing.T) {
 	const deltaSeconds = 1
 	tokenTTL, _ := time.ParseDuration(st.Cfg.TokenTTL)
 	assert.InDelta(t, loginTime.Add(tokenTTL).Unix(), claims["exp"].(float64), deltaSeconds)
-}
 
-func randomFakePassword(length int) string {
-	return gofakeit.Password(true, true, true, true, false, length)
+	deleteResponse, err := st.AuthClient.Delete(ctx, &sso.DeleteRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.NoError(t, err)
+	require.True(t, deleteResponse.GetIsDeleted())
 }
