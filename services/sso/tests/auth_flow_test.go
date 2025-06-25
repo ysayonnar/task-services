@@ -35,7 +35,6 @@ func TestRegisterLoginDeleteHappyPath(t *testing.T) {
 	loginResponse, err := st.AuthClient.Login(ctx, &sso.LoginRequest{
 		Email:    email,
 		Password: password,
-		AppId:    0,
 	})
 	require.NoError(t, err)
 

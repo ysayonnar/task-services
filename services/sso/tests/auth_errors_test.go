@@ -50,7 +50,6 @@ func TestInvalidEmailAndPassword(t *testing.T) {
 		loginResponse, err := st.AuthClient.Login(ctx, &sso.LoginRequest{
 			Email:    invalidEmail,
 			Password: validPassword,
-			AppId:    0,
 		})
 		require.Error(t, err)
 		assert.Equal(t, codes.InvalidArgument, status.Code(err))
@@ -79,7 +78,6 @@ func TestInvalidEmailAndPassword(t *testing.T) {
 		loginResponse, err := st.AuthClient.Login(ctx, &sso.LoginRequest{
 			Email:    validEmail,
 			Password: invalidPassword,
-			AppId:    0,
 		})
 		require.Error(t, err)
 		assert.Equal(t, codes.InvalidArgument, status.Code(err))
@@ -93,4 +91,56 @@ func TestInvalidEmailAndPassword(t *testing.T) {
 		assert.Equal(t, codes.InvalidArgument, status.Code(err))
 		assert.Empty(t, deleteResponse)
 	}
+}
+
+func TestLoginDeleteUserNotFound(t *testing.T) {
+	ctx, st := suite.New(t)
+
+	password := randomFakePassword(passwordDefaultLength)
+	email := gofakeit.Email()
+
+	registrationResponse, err := st.AuthClient.Register(ctx, &sso.RegisterRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, registrationResponse.GetUserId())
+
+	deleteResponse, err := st.AuthClient.Delete(ctx, &sso.DeleteRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.NoError(t, err)
+	assert.True(t, deleteResponse.GetIsDeleted())
+
+	loginResponse, err := st.AuthClient.Login(ctx, &sso.LoginRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.Error(t, err)
+	assert.Equal(t, codes.NotFound, status.Code(err))
+	assert.Empty(t, loginResponse)
+}
+
+func TestLoginInvalidPassword(t *testing.T) {
+	ctx, st := suite.New(t)
+
+	password := randomFakePassword(passwordDefaultLength)
+	email := gofakeit.Email()
+
+	registrationResponse, err := st.AuthClient.Register(ctx, &sso.RegisterRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, registrationResponse.GetUserId())
+
+	invalidPassword := randomFakePassword(passwordDefaultLength)
+	loginResponse, err := st.AuthClient.Login(ctx, &sso.LoginRequest{
+		Email:    email,
+		Password: invalidPassword,
+	})
+	require.Error(t, err)
+	assert.Equal(t, codes.Unauthenticated, status.Code(err))
+	assert.Empty(t, loginResponse)
 }
