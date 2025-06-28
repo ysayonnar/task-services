@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"sso/internal/config"
@@ -37,6 +38,17 @@ func New(cfg config.Config) (*Broker, error) {
 	}
 
 	return &Broker{Conn: conn, Ch: ch}, nil
+}
+
+func (b *Broker) Publish(ctx context.Context, key string, body []byte) error {
+	const op = "queue.Publish"
+
+	err := b.Ch.PublishWithContext(ctx, "events", key, false, false, amqp.Publishing{ContentType: "application/json", Body: body})
+	if err != nil {
+		return fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return nil
 }
 
 func (b *Broker) GracefulStop() {
