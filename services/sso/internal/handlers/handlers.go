@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"sso/internal/config"
+	"sso/internal/queue"
 	"sso/internal/storage"
 	"sso/internal/utils"
 
@@ -19,6 +20,7 @@ type SsoServer struct {
 	Log     *slog.Logger
 	Storage *storage.Storage
 	Cfg     *config.Config
+	Broker  *queue.Broker
 }
 
 func (s *SsoServer) Register(ctx context.Context, req *sso.RegisterRequest) (*sso.RegisterResponse, error) {

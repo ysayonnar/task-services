@@ -3,11 +3,7 @@ token_ttl: "24h"
 secret: "super_puper_secret"
 grpc:
   port: 80
-db:
-  host: "localhost"
-  port: 5432
-  username: "postgres"
-  password: "root"
-  db_name: "sso"
-  ssl_mode: "disable"
-
+rabbitmq:
+  username: "guest"
+  password: "guest"
+  host: "rabbitmq"

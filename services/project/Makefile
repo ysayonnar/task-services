@@ -23,6 +23,8 @@ tests:
 
 	cd ../sso && go test ./tests -v || true
 
+	#cd ../tasks && go test ./tests -v || true
+
 	docker compose -f docker-compose.test.yml down -v
 
 tests_down:

@@ -7,6 +7,7 @@ import (
 	"sso/internal/app"
 	"sso/internal/config"
 	"sso/internal/logger"
+	"sso/internal/queue"
 	"sso/internal/storage"
 	"syscall"
 )
@@ -26,8 +27,16 @@ func main() {
 	}
 	log.Info("db connected")
 
+	// broker initialization
+	broker, err := queue.New(cfg)
+	if err != nil {
+		log.Error("error while connecting to rabbitmq", "error", err.Error())
+		return
+	}
+	log.Info("rabbitmq connected")
+
 	// application initializing
-	app := app.New(log, &storage, &cfg)
+	app := app.New(log, &storage, broker, &cfg)
 	app.MustListen()
 
 	// graceful shutdown
@@ -38,4 +47,5 @@ func main() {
 	log.Info("stopping application", slog.String("signal", sign.String()))
 	app.ConnectionServer.GracefulStop()
 	storage.DB.Close()
+	broker.GracefulStop()
 }
