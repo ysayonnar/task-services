@@ -13,10 +13,18 @@ type GRPC struct {
 	Port int `yaml:"port"`
 }
 
+type RabbitMQ struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Host     string `yaml:"host"`
+}
+
 type Config struct {
-	Env    string `yaml:"env"`
-	Secret string `yaml:"secret"`
-	GRPC   GRPC   `yaml:"grpc"`
+	Env      string   `yaml:"env"`
+	TokenTTL string   `yaml:"token_ttl"`
+	Secret   string   `yaml:"secret"`
+	GRPC     GRPC     `yaml:"grpc"`
+	RabbitMQ RabbitMQ `yaml:"rabbitmq"`
 }
 
 func MustParse() Config {

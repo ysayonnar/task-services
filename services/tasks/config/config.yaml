@@ -2,4 +2,8 @@ env: "dev"
 secret: "super_puper_secret"
 grpc:
   port: 80
+rabbitmq:
+  username: "guest"
+  password: "guest"
+  host: "rabbitmq"
 
