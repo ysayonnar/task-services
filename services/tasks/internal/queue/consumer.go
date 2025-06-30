@@ -37,6 +37,11 @@ func (b *Broker) handleUserDeleted(d amqp.Delivery) {
 	const op = "queue.handleUserDeleted"
 	log := b.Log.With(slog.String("op", op))
 
+	if len(d.Body) == 0 {
+		d.Nack(false, false)
+		return
+	}
+
 	var dto UserDeletedDto
 	err := json.Unmarshal(d.Body, &dto)
 	if err != nil {
@@ -49,6 +54,6 @@ func (b *Broker) handleUserDeleted(d amqp.Delivery) {
 
 	err = b.Storage.DeleteAllTasksByUserId(ctx, dto.UserId)
 	if err != nil {
-		log.Error("error while parsing json", "error", err.Error())
+		log.Error("error while deliting data", "error", err.Error())
 	}
 }
