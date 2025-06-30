@@ -27,7 +27,7 @@ func main() {
 	log.Info("db connected")
 
 	// broker connection
-	broker, err := queue.New(cfg)
+	broker, err := queue.New(cfg, log, &storage)
 	if err != nil {
 		log.Error("error while connecting to rabbitmq", "error", err.Error())
 		return
@@ -37,6 +37,7 @@ func main() {
 	err = broker.Consume()
 	if err != nil {
 		log.Error("error while consuming broker", "error", err.Error())
+		return
 	}
 
 	app := app.New(log, &storage, broker, &cfg)

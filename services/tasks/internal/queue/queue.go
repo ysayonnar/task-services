@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log/slog"
 	"tasks/internal/config"
+	"tasks/internal/storage"
 )
 
 const (
@@ -16,11 +18,13 @@ const (
 )
 
 type Broker struct {
-	Conn *amqp.Connection
-	Ch   *amqp.Channel
+	Conn    *amqp.Connection
+	Ch      *amqp.Channel
+	Storage *storage.Storage
+	Log     *slog.Logger
 }
 
-func New(cfg config.Config) (*Broker, error) {
+func New(cfg config.Config, logger *slog.Logger, storage *storage.Storage) (*Broker, error) {
 	const op = `queue.New`
 
 	url := fmt.Sprintf("amqp://%s:%s@%s/", cfg.RabbitMQ.Username, cfg.RabbitMQ.Password, cfg.RabbitMQ.Host)
@@ -57,7 +61,7 @@ func New(cfg config.Config) (*Broker, error) {
 		return nil, fmt.Errorf("op: %s, err: %w", op, err)
 	}
 
-	return &Broker{Conn: conn, Ch: ch}, nil
+	return &Broker{Conn: conn, Ch: ch, Log: logger, Storage: storage}, nil
 }
 
 func (b *Broker) Publish(ctx context.Context, key string, body []byte) error {

@@ -253,3 +253,15 @@ func (s *Storage) UpdateTask(ctx context.Context, task models.Task) (int64, erro
 
 	return task.TaskId, nil
 }
+
+func (s *Storage) DeleteAllTasksByUserId(ctx context.Context, userId int64) error {
+	const op = "storage.DeleteAllTasksByUserId"
+
+	query := "DELETE FROM tasks WHERE user_id = $1;"
+	_, err := s.DB.Exec(query, userId)
+	if err != nil {
+		return fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return nil
+}

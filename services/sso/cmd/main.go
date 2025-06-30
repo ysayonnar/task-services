@@ -28,7 +28,7 @@ func main() {
 	log.Info("db connected")
 
 	// broker initialization
-	broker, err := queue.New(cfg)
+	broker, err := queue.New(cfg, log, &storage)
 	if err != nil {
 		log.Error("error while connecting to rabbitmq", "error", err.Error())
 		return
