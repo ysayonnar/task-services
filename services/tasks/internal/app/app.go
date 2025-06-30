@@ -6,6 +6,7 @@ import (
 	"net"
 	"tasks/internal/config"
 	"tasks/internal/handlers"
+	"tasks/internal/queue"
 	"tasks/internal/storage"
 
 	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
@@ -17,13 +18,14 @@ type App struct {
 	ConnectionServer *grpc.Server
 }
 
-func New(log *slog.Logger, storage *storage.Storage, cfg *config.Config) App {
+func New(log *slog.Logger, storage *storage.Storage, broker *queue.Broker, cfg *config.Config) App {
 	var app App
 
 	app.GrpcServer = handlers.TasksServer{
 		Log:     log,
 		Storage: storage,
 		Cfg:     cfg,
+		Broker:  broker,
 	}
 	app.ConnectionServer = grpc.NewServer()
 

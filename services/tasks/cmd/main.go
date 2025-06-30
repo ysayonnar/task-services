@@ -8,6 +8,7 @@ import (
 	"tasks/internal/app"
 	"tasks/internal/config"
 	"tasks/internal/logger"
+	"tasks/internal/queue"
 	"tasks/internal/storage"
 )
 
@@ -25,7 +26,20 @@ func main() {
 	}
 	log.Info("db connected")
 
-	app := app.New(log, &storage, &cfg)
+	// broker connection
+	broker, err := queue.New(cfg)
+	if err != nil {
+		log.Error("error while connecting to rabbitmq", "error", err.Error())
+		return
+	}
+	log.Info("rabbitmq connected")
+
+	err = broker.Consume()
+	if err != nil {
+		log.Error("error while consuming broker", "error", err.Error())
+	}
+
+	app := app.New(log, &storage, broker, &cfg)
 	app.MustListen()
 
 	// graceful shutdown
@@ -36,4 +50,5 @@ func main() {
 	log.Info("stopping application", slog.String("signal", sign.String()))
 	app.ConnectionServer.GracefulStop()
 	storage.DB.Close()
+	broker.GracefulStop()
 }

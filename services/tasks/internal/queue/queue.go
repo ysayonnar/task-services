@@ -8,8 +8,11 @@ import (
 )
 
 const (
+	EXCHANGE_NAME       = "events"
+	QUEUE_NAME          = "tasks_queue"
 	KEY_USER_REGISTERED = "user.registered"
 	KEY_USER_DELETED    = "user.deleted"
+	KEY_TASK_NOTIFICATE = "task.notificate"
 )
 
 type Broker struct {
@@ -32,7 +35,24 @@ func New(cfg config.Config) (*Broker, error) {
 		return nil, fmt.Errorf("op: %s, err: %w", op, err)
 	}
 
-	err = ch.ExchangeDeclare("events", "topic", true, false, false, false, nil)
+	err = ch.ExchangeDeclare(EXCHANGE_NAME, "topic", true, false, false, false, nil)
+	if err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	q, err := ch.QueueDeclare(
+		QUEUE_NAME,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	err = ch.QueueBind(q.Name, KEY_USER_DELETED, EXCHANGE_NAME, false, nil)
 	if err != nil {
 		return nil, fmt.Errorf("op: %s, err: %w", op, err)
 	}
@@ -43,7 +63,7 @@ func New(cfg config.Config) (*Broker, error) {
 func (b *Broker) Publish(ctx context.Context, key string, body []byte) error {
 	const op = "queue.Publish"
 
-	err := b.Ch.PublishWithContext(ctx, "events", key, false, false, amqp.Publishing{ContentType: "application/json", Body: body})
+	err := b.Ch.PublishWithContext(ctx, EXCHANGE_NAME, key, false, false, amqp.Publishing{ContentType: "application/json", Body: body})
 	if err != nil {
 		return fmt.Errorf("op: %s, err: %w", op, err)
 	}

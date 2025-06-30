@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"tasks/internal/config"
 	"tasks/internal/models"
+	"tasks/internal/queue"
 	"tasks/internal/storage"
 
 	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
@@ -18,6 +19,7 @@ type TasksServer struct {
 	Log     *slog.Logger
 	Storage *storage.Storage
 	Cfg     *config.Config
+	Broker  *queue.Broker
 }
 
 func (server *TasksServer) CreateTask(ctx context.Context, req *tasks.CreateTaskRequest) (*tasks.CreateTaskResponse, error) {
