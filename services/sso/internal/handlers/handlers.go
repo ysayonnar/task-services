@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"sso/internal/config"
@@ -121,6 +122,15 @@ func (s *SsoServer) Delete(ctx context.Context, req *sso.DeleteRequest) (*sso.De
 	if err != nil {
 		// NOTE: no checking for storage.ErrUserNotFound, it was at line 99
 		log.Error("error while deleting user", "error", err.Error())
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
+	data, err := json.Marshal(struct {
+		UserId int64 `json:"user_id"`
+	}{UserId: user.UserId})
+
+	err = s.Broker.Publish(ctx, queue.KEY_USER_DELETED, data)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 

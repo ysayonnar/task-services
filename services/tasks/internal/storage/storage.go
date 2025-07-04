@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"os"
 	"tasks/internal/models"
+	"time"
 )
 
 var ErrCategoryNotFound = errors.New("category with such id doesn't exist")
@@ -151,7 +153,7 @@ func (s *Storage) DeleteTask(ctx context.Context, userId int64, taskId int64) (i
 func (s *Storage) GetTasksByUserId(ctx context.Context, userId int64) ([]*tasks.Task, error) {
 	const op = "storage.GetTasksByUserId"
 
-	query := `SELECT (t.task_id, tc.category_id, c.name, t.title, t.description, t.deadline, t.is_notificate, t.created_at) FROM tasks AS t INNER JOIN tasks_categories AS tc ON t.task_id = tc.task_id INNER JOIN categories AS c ON c.category_id = tc.category_id WHERE t.user_id = $1;`
+	query := `SELECT t.task_id, tc.category_id, c.name, t.title, t.description, t.deadline, t.is_notificate, t.created_at FROM tasks AS t INNER JOIN tasks_categories AS tc ON t.task_id = tc.task_id INNER JOIN categories AS c ON c.category_id = tc.category_id WHERE t.user_id = $1;`
 
 	rows, err := s.DB.QueryContext(ctx, query, userId)
 	if err != nil {
@@ -167,16 +169,21 @@ func (s *Storage) GetTasksByUserId(ctx context.Context, userId int64) ([]*tasks.
 	for rows.Next() {
 		var task tasks.Task
 
+		var deadline, createdAt time.Time
 		err := rows.Scan(
 			&task.TaskId,
 			&task.CategoryId,
 			&task.CategoryName,
 			&task.Title,
 			&task.Description,
-			&task.Deadline,
+			&deadline,
 			&task.IsNotificate,
-			&task.CreatedAt,
+			&createdAt,
 		)
+
+		task.Deadline = timestamppb.New(deadline)
+		task.CreatedAt = timestamppb.New(createdAt)
+
 		if err != nil {
 			return nil, fmt.Errorf("op: %s, err: %w", op, err)
 		}
@@ -209,16 +216,21 @@ func (s *Storage) GetTasksByUserIdAndCategoryId(ctx context.Context, userId int6
 	for rows.Next() {
 		var task tasks.Task
 
+		var deadline, createdAt time.Time
 		err := rows.Scan(
 			&task.TaskId,
 			&task.CategoryId,
 			&task.CategoryName,
 			&task.Title,
 			&task.Description,
-			&task.Deadline,
+			&deadline,
 			&task.IsNotificate,
-			&task.CreatedAt,
+			&createdAt,
 		)
+
+		task.Deadline = timestamppb.New(deadline)
+		task.CreatedAt = timestamppb.New(createdAt)
+
 		if err != nil {
 			return nil, fmt.Errorf("op: %s, err: %w", op, err)
 		}
