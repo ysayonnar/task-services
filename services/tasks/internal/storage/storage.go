@@ -200,7 +200,7 @@ func (s *Storage) GetTasksByUserId(ctx context.Context, userId int64) ([]*tasks.
 func (s *Storage) GetTasksByUserIdAndCategoryId(ctx context.Context, userId int64, categoryId int64) ([]*tasks.Task, error) {
 	const op = "storage.GetTasksByUserId"
 
-	query := `SELECT (t.task_id, tc.category_id, c.name, t.title, t.description, t.deadline, t.is_notificate, t.created_at) FROM tasks AS t INNER JOIN tasks_categories AS tc ON t.task_id = tc.task_id INNER JOIN categories AS c ON c.category_id = tc.category_id WHERE t.user_id = $1 AND c.category_id = $2;`
+	query := `SELECT t.task_id, tc.category_id, c.name, t.title, t.description, t.deadline, t.is_notificate, t.created_at FROM tasks AS t INNER JOIN tasks_categories AS tc ON t.task_id = tc.task_id INNER JOIN categories AS c ON c.category_id = tc.category_id WHERE t.user_id = $1 AND c.category_id = $2;`
 
 	rows, err := s.DB.QueryContext(ctx, query, userId, categoryId)
 	if err != nil {
@@ -249,7 +249,7 @@ func (s *Storage) UpdateTask(ctx context.Context, task models.Task) (int64, erro
 
 	query := "UPDATE tasks SET title = $1, description = $2, is_notificate = $3, deadline = $4 WHERE user_id = $5 AND task_id = $6;"
 
-	res, err := s.DB.ExecContext(ctx, query, task.Title, task.Deadline, task.IsNotificate, task.Deadline, task.UserId, task.TaskId)
+	res, err := s.DB.ExecContext(ctx, query, task.Title, task.Description, task.IsNotificate, task.Deadline, task.UserId, task.TaskId)
 	if err != nil {
 		return 0, fmt.Errorf("op: %s, err: %w", op, err)
 	}

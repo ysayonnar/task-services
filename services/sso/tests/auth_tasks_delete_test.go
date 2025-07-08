@@ -29,7 +29,7 @@ func TestDeleteTasksBroker(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, createCategoryResponse.GetCategoryId())
 
-	createTaskRequest, err := st.TasksClient.CreateTask(ctx, &tasks.CreateTaskRequest{
+	createTaskResponse, err := st.TasksClient.CreateTask(ctx, &tasks.CreateTaskRequest{
 		UserId:       registrationResponse.GetUserId(),
 		CategoryId:   createCategoryResponse.GetCategoryId(),
 		Title:        gofakeit.HipsterWord(),
@@ -38,20 +38,20 @@ func TestDeleteTasksBroker(t *testing.T) {
 		Deadline:     timestamppb.New(time.Now().Add(24 * time.Hour)),
 	})
 	require.NoError(t, err)
-	assert.NotEmpty(t, createTaskRequest.GetTaskId())
+	assert.NotEmpty(t, createTaskResponse.GetTaskId())
 
-	getTasksRequest, err := st.TasksClient.GetTasks(ctx, &tasks.GetTasksRequest{UserId: registrationResponse.GetUserId()})
+	getTasksResponse, err := st.TasksClient.GetTasks(ctx, &tasks.GetTasksRequest{UserId: registrationResponse.GetUserId()})
 	require.NoError(t, err)
-	require.Equal(t, 1, len(getTasksRequest.GetTasks()))
+	require.Equal(t, 1, len(getTasksResponse.GetTasks()))
 
-	deleteUserRequest, err := st.AuthClient.Delete(ctx, &sso.DeleteRequest{
+	deleteUserResponse, err := st.AuthClient.Delete(ctx, &sso.DeleteRequest{
 		Email:    email,
 		Password: password,
 	})
 	require.NoError(t, err)
-	require.True(t, deleteUserRequest.GetIsDeleted())
+	require.True(t, deleteUserResponse.GetIsDeleted())
 
-	getTasksAfterDeleteRequest, err := st.TasksClient.GetTasks(ctx, &tasks.GetTasksRequest{UserId: registrationResponse.GetUserId()})
+	getTasksAfterDeleteResponse, err := st.TasksClient.GetTasks(ctx, &tasks.GetTasksRequest{UserId: registrationResponse.GetUserId()})
 	require.NoError(t, err)
-	require.Equal(t, 0, len(getTasksAfterDeleteRequest.GetTasks()))
+	require.Equal(t, 0, len(getTasksAfterDeleteResponse.GetTasks()))
 }

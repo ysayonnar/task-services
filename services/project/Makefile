@@ -23,9 +23,21 @@ tests:
 
 	cd ../sso && go test ./tests -v || true
 
-	#cd ../tasks && go test ./tests -v || true
+	cd ../tasks && go test ./tests -v || true
 
 	docker compose -f docker-compose.test.yml down -v
+
+tests_keep_up:
+	docker compose -f docker-compose.test.yml up --build -d
+
+	sleep 5
+
+	cd ../sso && go test ./tests -v
+
+	cd ../tasks && go test ./tests -v
+
+	docker compose -f docker-compose.test.yml down -v
+
 
 tests_down:
 	docker compose -f docker-compose.test.yml down -v
