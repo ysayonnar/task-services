@@ -21,7 +21,6 @@ func randomFakePassword(length int) string {
 	return gofakeit.Password(true, true, true, true, false, length)
 }
 
-// NOTE: ALL REQUESTS HERE MUST BE AUTHENTICATED WITH JWT
 func TestTasksHappyPath(t *testing.T) {
 	ctx, st := suite.New(t)
 
@@ -34,8 +33,18 @@ func TestTasksHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, registrationResponse.GetUserId())
 
+	loginResponse, err := st.AuthClient.Login(ctx, &sso.LoginRequest{
+		Email:    email,
+		Password: password,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, loginResponse.GetToken())
+
 	categoryName := gofakeit.HipsterWord()
-	createCategoryResponse, err := st.TasksClient.CreateCategory(ctx, &tasks.CreateCategoryRequest{Name: categoryName})
+	createCategoryResponse, err := st.TasksClient.CreateCategory(ctx, &tasks.CreateCategoryRequest{
+		Token: loginResponse.GetToken(),
+		Name:  categoryName,
+	})
 	require.NoError(t, err)
 	require.NotEmpty(t, createCategoryResponse.GetCategoryId())
 
@@ -44,7 +53,7 @@ func TestTasksHappyPath(t *testing.T) {
 	deadline := timestamppb.New(time.Now().Add(24 * time.Hour))
 
 	createTaskResponse, err := st.TasksClient.CreateTask(ctx, &tasks.CreateTaskRequest{
-		UserId:       registrationResponse.GetUserId(),
+		Token:        loginResponse.GetToken(),
 		CategoryId:   createCategoryResponse.GetCategoryId(),
 		Title:        taskTitle,
 		Description:  taskDesc,
@@ -54,7 +63,7 @@ func TestTasksHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, createTaskResponse.GetTaskId())
 
-	getTasksResponse, err := st.TasksClient.GetTasks(ctx, &tasks.GetTasksRequest{UserId: registrationResponse.GetUserId()})
+	getTasksResponse, err := st.TasksClient.GetTasks(ctx, &tasks.GetTasksRequest{Token: loginResponse.GetToken()})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(getTasksResponse.GetTasks()))
 	assert.Equal(t, createCategoryResponse.GetCategoryId(), getTasksResponse.GetTasks()[0].CategoryId)
@@ -67,7 +76,7 @@ func TestTasksHappyPath(t *testing.T) {
 	newDesc := gofakeit.HipsterSentence(descriptionDefaultLength)
 	updateTaskResponse, err := st.TasksClient.UpdateTask(ctx, &tasks.UpdateTaskRequest{
 		TaskId:       createTaskResponse.GetTaskId(),
-		UserId:       registrationResponse.GetUserId(),
+		Token:        loginResponse.GetToken(),
 		CategoryId:   createCategoryResponse.GetCategoryId(),
 		Title:        newTitle,
 		Description:  newDesc,
@@ -79,7 +88,7 @@ func TestTasksHappyPath(t *testing.T) {
 	assert.Equal(t, createTaskResponse.GetTaskId(), updateTaskResponse.GetTaskId())
 
 	getTasksByCategoryResponse, err := st.TasksClient.GetTasksByCategory(ctx, &tasks.GetTasksByCategoryRequest{
-		UserId:     registrationResponse.GetUserId(),
+		Token:      loginResponse.GetToken(),
 		CategoryId: createCategoryResponse.GetCategoryId(),
 	})
 	require.NoError(t, err)
@@ -91,7 +100,7 @@ func TestTasksHappyPath(t *testing.T) {
 	assert.Equal(t, deadline.GetSeconds(), getTasksByCategoryResponse.GetTasks()[0].Deadline.GetSeconds())
 
 	deleteTaskResponse, err := st.TasksClient.DeleteTask(ctx, &tasks.DeleteTaskRequest{
-		UserId: registrationResponse.GetUserId(),
+		Token:  loginResponse.GetToken(),
 		TaskId: createTaskResponse.GetTaskId(),
 	})
 	require.NoError(t, err)

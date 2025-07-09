@@ -3,15 +3,15 @@ package handlers
 import (
 	"context"
 	"errors"
+	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log/slog"
 	"tasks/internal/config"
 	"tasks/internal/models"
 	"tasks/internal/queue"
 	"tasks/internal/storage"
-
-	tasks "github.com/ysayonnar/task-contracts/tasks/gen/go"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"tasks/internal/utils"
 )
 
 type TasksServer struct {
@@ -26,8 +26,13 @@ func (server *TasksServer) CreateTask(ctx context.Context, req *tasks.CreateTask
 	const op = "handlers.CreateTask"
 	log := server.Log.With(slog.String("op", op))
 
+	userId, err := utils.ParseUserId(req.GetToken(), server.Cfg.Secret)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+	}
+
 	taskToCreate := models.Task{
-		UserId:       req.GetUserId(),
+		UserId:       userId,
 		Title:        req.GetTitle(),
 		Description:  req.GetDescription(),
 		Deadline:     req.GetDeadline().AsTime(),
@@ -51,6 +56,11 @@ func (server *TasksServer) CreateCategory(ctx context.Context, req *tasks.Create
 	const op = "handlers.CreateCategory"
 	log := server.Log.With(slog.String("op", op))
 
+	_, err := utils.ParseUserId(req.GetToken(), server.Cfg.Secret)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+	}
+
 	categoryId, err := server.Storage.InsertCategory(ctx, req.GetName())
 	if err != nil {
 		if errors.Is(err, storage.ErrCategoryAlreadyExists) {
@@ -68,7 +78,12 @@ func (server *TasksServer) DeleteTask(ctx context.Context, req *tasks.DeleteTask
 	const op = "handlers.DeleteTask"
 	log := server.Log.With(slog.String("op", op))
 
-	deletedTaskId, err := server.Storage.DeleteTask(ctx, req.GetUserId(), req.GetTaskId())
+	userId, err := utils.ParseUserId(req.GetToken(), server.Cfg.Secret)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+	}
+
+	deletedTaskId, err := server.Storage.DeleteTask(ctx, userId, req.GetTaskId())
 	if err != nil {
 		if errors.Is(err, storage.ErrTaskNotFound) {
 			return nil, status.Error(codes.NotFound, "task with such id doesn't exist")
@@ -85,7 +100,12 @@ func (server *TasksServer) GetTasks(ctx context.Context, req *tasks.GetTasksRequ
 	const op = "handlers.GetTasks"
 	log := server.Log.With(slog.String("op", op))
 
-	foundTasks, err := server.Storage.GetTasksByUserId(ctx, req.GetUserId())
+	userId, err := utils.ParseUserId(req.GetToken(), server.Cfg.Secret)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+	}
+
+	foundTasks, err := server.Storage.GetTasksByUserId(ctx, userId)
 	if err != nil {
 		if errors.Is(err, storage.ErrTaskNotFound) {
 			return nil, status.Error(codes.NotFound, "tasks not found")
@@ -101,7 +121,12 @@ func (server *TasksServer) GetTasksByCategory(ctx context.Context, req *tasks.Ge
 	const op = "handlers.GetTasksByCategory"
 	log := server.Log.With(slog.String("op", op))
 
-	foundTasks, err := server.Storage.GetTasksByUserIdAndCategoryId(ctx, req.GetUserId(), req.GetCategoryId())
+	userId, err := utils.ParseUserId(req.GetToken(), server.Cfg.Secret)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+	}
+
+	foundTasks, err := server.Storage.GetTasksByUserIdAndCategoryId(ctx, userId, req.GetCategoryId())
 	if err != nil {
 		if errors.Is(err, storage.ErrTaskNotFound) {
 			return nil, status.Error(codes.NotFound, "tasks not found")
@@ -117,15 +142,21 @@ func (server *TasksServer) UpdateTask(ctx context.Context, req *tasks.UpdateTask
 	const op = "handlers.UpdateTask"
 	log := server.Log.With(slog.String("op", op))
 
-	var task models.Task
-	task.Title = req.GetTitle()
-	task.Description = req.GetDescription()
-	task.IsNotificate = req.GetIsNotificate()
-	task.Deadline = req.GetDeadline().AsTime()
-	task.UserId = req.GetUserId()
-	task.TaskId = req.GetTaskId()
+	userId, err := utils.ParseUserId(req.GetToken(), server.Cfg.Secret)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid bearer token")
+	}
 
-	taskId, err := server.Storage.UpdateTask(ctx, task)
+	taskToUpdate := models.Task{
+		TaskId:       req.GetTaskId(),
+		UserId:       userId,
+		Title:        req.GetTitle(),
+		Description:  req.GetDescription(),
+		Deadline:     req.GetDeadline().AsTime(),
+		IsNotificate: req.GetIsNotificate(),
+	}
+
+	taskId, err := server.Storage.UpdateTask(ctx, taskToUpdate)
 	if err != nil {
 		if errors.Is(err, storage.ErrTaskNotFound) {
 			return nil, status.Error(codes.NotFound, "task not found")
@@ -136,6 +167,4 @@ func (server *TasksServer) UpdateTask(ctx context.Context, req *tasks.UpdateTask
 	}
 
 	return &tasks.UpdateTaskResponse{TaskId: taskId}, nil
-
-	return nil, nil
 }

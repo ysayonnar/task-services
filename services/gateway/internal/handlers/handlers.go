@@ -27,12 +27,19 @@ func InitRouter(logger *slog.Logger, clients *grpc.GrpcClients, cfg config.Confi
 	router.Mux.HandleFunc("/sso/login", router.Login)
 	router.Mux.HandleFunc("/sso/delete", router.Delete)
 
-	router.Mux.HandleFunc("/tasks/create-task", router.AuthMW(router.CreateTask))
-	router.Mux.HandleFunc("/tasks/create-category", router.AuthMW(router.CreateCategory))
-	router.Mux.HandleFunc("/tasks/all", router.AuthMW(router.GetTasks))
-	router.Mux.HandleFunc("/tasks/category", router.AuthMW(router.GetTasksByCategory))
-	router.Mux.HandleFunc("/tasks/delete", router.AuthMW(router.DeleteTask))
-	router.Mux.HandleFunc("/tasks/update", router.AuthMW(router.UpdateTask))
+	//router.Mux.HandleFunc("/tasks/create-task", router.AuthMW(router.CreateTask))
+	//router.Mux.HandleFunc("/tasks/create-category", router.AuthMW(router.CreateCategory))
+	//router.Mux.HandleFunc("/tasks/all", router.AuthMW(router.GetTasks))
+	//router.Mux.HandleFunc("/tasks/category", router.AuthMW(router.GetTasksByCategory))
+	//router.Mux.HandleFunc("/tasks/delete", router.AuthMW(router.DeleteTask))
+	//router.Mux.HandleFunc("/tasks/update", router.AuthMW(router.UpdateTask))
+
+	router.Mux.HandleFunc("/tasks/create-task", router.CreateTask)
+	router.Mux.HandleFunc("/tasks/create-category", router.CreateCategory)
+	router.Mux.HandleFunc("/tasks/all", router.GetTasks)
+	router.Mux.HandleFunc("/tasks/category", router.GetTasksByCategory)
+	router.Mux.HandleFunc("/tasks/delete", router.DeleteTask)
+	router.Mux.HandleFunc("/tasks/update", router.UpdateTask)
 
 	return router
 }
