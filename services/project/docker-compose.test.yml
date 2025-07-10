@@ -74,6 +74,18 @@ services:
     volumes:
       - ./test-db-data/tasks-postgres/:/var/lib/postgresql/data
 
+  # NOTIFICATION
+  notification:
+    build:
+      context: ./../notification
+      dockerfile: ./../notification/notification.dockerfile
+    restart: always
+    ports:
+      - "8083:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+
   rabbitmq:
     image: 'rabbitmq:3.9-alpine'
     ports:

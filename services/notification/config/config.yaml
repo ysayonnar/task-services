@@ -1,0 +1,6 @@
+env: "dev" #dev, prod
+secret: "super_puper_secret"
+rabbitmq:
+  username: "guest"
+  password: "guest"
+  host: "rabbitmq"
