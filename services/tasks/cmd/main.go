@@ -8,6 +8,7 @@ import (
 	"tasks/internal/app"
 	"tasks/internal/config"
 	"tasks/internal/logger"
+	notification_worker "tasks/internal/notification-worker"
 	"tasks/internal/queue"
 	"tasks/internal/storage"
 )
@@ -39,6 +40,9 @@ func main() {
 		log.Error("error while consuming broker", "error", err.Error())
 		return
 	}
+
+	notificationWorker := notification_worker.New(log, &storage, broker)
+	go notificationWorker.Listen()
 
 	app := app.New(log, &storage, broker, &cfg)
 	app.MustListen()

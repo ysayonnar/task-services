@@ -277,3 +277,47 @@ func (s *Storage) DeleteAllTasksByUserId(ctx context.Context, userId int64) erro
 
 	return nil
 }
+
+func (s *Storage) GetTasksToNotify(ctx context.Context) ([]models.Task, error) {
+	const op = "storage.GetTasksToNotify"
+
+	query := `SELECT
+		user_id,
+		title,
+		description
+	FROM tasks
+	WHERE deadline <= now() AND is_notificate == FALSE;
+`
+
+	rows, err := s.DB.QueryContext(ctx, query)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []models.Task{}, nil
+		}
+
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+	defer rows.Close()
+
+	var selectedTasks []models.Task
+	for rows.Next() {
+
+		var task models.Task
+		err := rows.Scan(
+			&task.UserId,
+			&task.Title,
+			&task.Description,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("op: %s, err: %w", op, err)
+		}
+		selectedTasks = append(selectedTasks, task)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return selectedTasks, nil
+}
