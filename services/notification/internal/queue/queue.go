@@ -3,36 +3,29 @@ package queue
 import (
 	"context"
 	"fmt"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"log/slog"
-	"sso/internal/config"
-	"sso/internal/storage"
+	"notification/internal/config"
+
+	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
 	EXCHANGE_NAME       = "events"
+	QUEUE_NAME          = "tasks_queue"
 	KEY_USER_REGISTERED = "user.registered"
 	KEY_USER_DELETED    = "user.deleted"
 	KEY_TASK_NOTIFICATE = "task.notificate"
 )
 
 type Broker struct {
-	Conn    *amqp.Connection
-	Ch      *amqp.Channel
-	Log     *slog.Logger
-	Storage *storage.Storage
+	Conn        *amqp.Connection
+	Ch          *amqp.Channel
+	RedisClient *redis.Client
+	Log         *slog.Logger
 }
 
-type UserDeletedDto struct {
-	UserId int64 `json:"user_id"`
-}
-
-type UserCreatedDto struct {
-	UserId int64  `json:"user_id"`
-	Email  string `json:"email"`
-}
-
-func New(cfg config.Config, logger *slog.Logger, storage *storage.Storage) (*Broker, error) {
+func New(cfg config.Config, logger *slog.Logger, redisClient *redis.Client) (*Broker, error) {
 	const op = `queue.New`
 
 	url := fmt.Sprintf("amqp://%s:%s@%s/", cfg.RabbitMQ.Username, cfg.RabbitMQ.Password, cfg.RabbitMQ.Host)
@@ -52,7 +45,33 @@ func New(cfg config.Config, logger *slog.Logger, storage *storage.Storage) (*Bro
 		return nil, fmt.Errorf("op: %s, err: %w", op, err)
 	}
 
-	return &Broker{Conn: conn, Ch: ch, Log: logger, Storage: storage}, nil
+	q, err := ch.QueueDeclare(
+		QUEUE_NAME,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	err = ch.QueueBind(q.Name, KEY_TASK_NOTIFICATE, EXCHANGE_NAME, false, nil)
+	if err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+	err = ch.QueueBind(q.Name, KEY_USER_REGISTERED, EXCHANGE_NAME, false, nil)
+	if err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	err = ch.QueueBind(q.Name, KEY_USER_DELETED, EXCHANGE_NAME, false, nil)
+	if err != nil {
+		return nil, fmt.Errorf("op: %s, err: %w", op, err)
+	}
+
+	return &Broker{Conn: conn, Ch: ch, Log: logger, RedisClient: redisClient}, nil
 }
 
 func (b *Broker) Publish(ctx context.Context, key string, body []byte) error {

@@ -52,6 +52,13 @@ func (s *SsoServer) Register(ctx context.Context, req *sso.RegisterRequest) (*ss
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
+	data, err := json.Marshal(queue.UserCreatedDto{UserId: userId, Email: req.GetEmail()})
+
+	err = s.Broker.Publish(ctx, queue.KEY_USER_REGISTERED, data)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "internal server error")
+	}
+
 	return &sso.RegisterResponse{UserId: userId}, nil
 }
 
@@ -125,9 +132,7 @@ func (s *SsoServer) Delete(ctx context.Context, req *sso.DeleteRequest) (*sso.De
 		return nil, status.Error(codes.Internal, "internal server error")
 	}
 
-	data, err := json.Marshal(struct {
-		UserId int64 `json:"user_id"`
-	}{UserId: user.UserId})
+	data, err := json.Marshal(queue.UserDeletedDto{UserId: user.UserId})
 
 	err = s.Broker.Publish(ctx, queue.KEY_USER_DELETED, data)
 	if err != nil {
